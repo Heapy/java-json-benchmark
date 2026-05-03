@@ -204,8 +204,10 @@ public class Serialization extends JsonBench {
     @Benchmark
     @Override
     public Object jsonio() {
-        // showTypeInfoNever produces standard JSON without json-io's @type metadata,
-        // so the test harness's Jackson-based round-trip check parses it cleanly.
-        return JsonIo.toJson(JSON_SOURCE().nextPojo(), new WriteOptionsBuilder().showTypeInfoNever().build());
+        // standardJson() produces Jackson-compatible JSON: suppresses @type, @id/@ref,
+        // root type info; stringifies non-String map keys; emits ISO-8601 dates.
+        // Suitable for the round-trip check (Jackson parses our output) and for
+        // apples-to-apples comparison with other databind libraries.
+        return JsonIo.toJson(JSON_SOURCE().nextPojo(), new WriteOptionsBuilder().standardJson().build());
     }
 }

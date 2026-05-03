@@ -36,7 +36,7 @@ public abstract class JsonBenchmark<T> {
         if (o instanceof Users || o instanceof Clients) {
             testPojo((T) o);
         } else if (o instanceof com.cedarsoftware.io.JsonObject) {
-            String v = com.cedarsoftware.io.JsonIo.toJson(o, new WriteOptionsBuilder().showTypeInfoNever().build());
+            String v = com.cedarsoftware.io.JsonIo.toJson(o, new WriteOptionsBuilder().standardJson().build());
             testString(v);
         } else if (o instanceof com.grack.nanojson.JsonObject) {
             String v = com.grack.nanojson.JsonWriter.string(o);

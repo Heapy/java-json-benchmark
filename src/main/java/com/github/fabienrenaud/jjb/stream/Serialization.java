@@ -96,9 +96,9 @@ public class Serialization extends JsonBench {
     @Benchmark
     @Override
     public Object jsonio() {
-
-        // showTypeInfoNever maps to old TYPE=false behavior see {@link JsonIo#getWriteOptionsBuilder(java.util.Map)}
-        return JsonIo.toJson(JSON_SOURCE().nextPojo(), new WriteOptionsBuilder().showTypeInfoNever().build());
+        // standardJson() produces Jackson-compatible JSON: suppresses @type, @id/@ref,
+        // root type info; stringifies non-String map keys; emits ISO-8601 dates.
+        return JsonIo.toJson(JSON_SOURCE().nextPojo(), new WriteOptionsBuilder().standardJson().build());
     }
 
     @Benchmark
