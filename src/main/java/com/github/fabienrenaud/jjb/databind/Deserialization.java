@@ -2,6 +2,7 @@ package com.github.fabienrenaud.jjb.databind;
 
 import com.alibaba.fastjson2.JSON;
 import com.bluelinelabs.logansquare.LoganSquare;
+import com.cedarsoftware.io.JsonIo;
 import com.github.fabienrenaud.jjb.JsonBench;
 import com.github.fabienrenaud.jjb.data.JsonSource;
 import com.google.gson.JsonSyntaxException;
@@ -160,5 +161,12 @@ public class Deserialization extends JsonBench {
     @Override
     public Object djomo() throws Exception {
         return JSON_SOURCE().provider().djomo().fromString(JSON_SOURCE().nextString(), JSON_SOURCE().pojoType());
+    }
+
+    @Benchmark
+    @Override
+    public Object jsonio() {
+        // Default ReadOptions; json-io infers field types from the target Class.
+        return JsonIo.toJava(JSON_SOURCE().nextString(), null).asClass(JSON_SOURCE().pojoType());
     }
 }

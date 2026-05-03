@@ -17,7 +17,7 @@ public enum BenchSupport {
         new Libapi(Library.JAKARTAJSON, Api.STREAM),
         new Libapi(Library.FLEXJSON, Api.DATABIND),
         new Libapi(Library.FASTJSON, Api.DATABIND),
-        new Libapi(Library.JSONIO, Api.STREAM),
+        new Libapi(Library.JSONIO, Api.DATABIND, Api.STREAM),
         new Libapi(Library.BOON, Api.DATABIND),
         new Libapi(Library.JOHNZON, Api.DATABIND),
         new Libapi(Library.JSONSMART, Api.DATABIND),

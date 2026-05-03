@@ -2,6 +2,8 @@ package com.github.fabienrenaud.jjb.databind;
 
 import com.alibaba.fastjson2.JSON;
 import com.bluelinelabs.logansquare.LoganSquare;
+import com.cedarsoftware.io.JsonIo;
+import com.cedarsoftware.io.WriteOptionsBuilder;
 import com.github.fabienrenaud.jjb.JsonBench;
 import com.github.fabienrenaud.jjb.JsonUtils;
 import com.github.fabienrenaud.jjb.data.JsonSource;
@@ -197,5 +199,13 @@ public class Serialization extends JsonBench {
         ByteArrayOutputStream baos = JsonUtils.byteArrayOutputStream();
         JSON_SOURCE().provider().djomo().write(JSON_SOURCE().nextPojo(), baos);
         return baos;
+    }
+
+    @Benchmark
+    @Override
+    public Object jsonio() {
+        // showTypeInfoNever produces standard JSON without json-io's @type metadata,
+        // so the test harness's Jackson-based round-trip check parses it cleanly.
+        return JsonIo.toJson(JSON_SOURCE().nextPojo(), new WriteOptionsBuilder().showTypeInfoNever().build());
     }
 }
