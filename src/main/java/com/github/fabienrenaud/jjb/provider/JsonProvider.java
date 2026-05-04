@@ -1,5 +1,7 @@
 package com.github.fabienrenaud.jjb.provider;
 
+import com.cedarsoftware.io.ReadOptions;
+import com.cedarsoftware.io.WriteOptions;
 import com.dslplatform.json.DslJson;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,5 +63,9 @@ public interface JsonProvider<T> {
     JsonSink quickbufSink();
 
     com.bigcloud.djomo.Json djomo();
+
+    WriteOptions jsonioWriteOptions();
+
+    ReadOptions jsonioReadOptionsMaps();
 
 }

@@ -5,7 +5,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 
 import com.cedarsoftware.io.JsonIo;
-import com.cedarsoftware.io.WriteOptionsBuilder;
 import org.openjdk.jmh.annotations.Benchmark;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -98,7 +97,7 @@ public class Serialization extends JsonBench {
     public Object jsonio() {
         // standardJson() produces Jackson-compatible JSON: suppresses @type, @id/@ref,
         // root type info; stringifies non-String map keys; emits ISO-8601 dates.
-        return JsonIo.toJson(JSON_SOURCE().nextPojo(), new WriteOptionsBuilder().standardJson().build());
+        return JsonIo.toJson(JSON_SOURCE().nextPojo(), JSON_SOURCE().provider().jsonioWriteOptions());
     }
 
     @Benchmark

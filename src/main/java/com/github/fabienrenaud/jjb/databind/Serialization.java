@@ -3,7 +3,6 @@ package com.github.fabienrenaud.jjb.databind;
 import com.alibaba.fastjson2.JSON;
 import com.bluelinelabs.logansquare.LoganSquare;
 import com.cedarsoftware.io.JsonIo;
-import com.cedarsoftware.io.WriteOptionsBuilder;
 import com.github.fabienrenaud.jjb.JsonBench;
 import com.github.fabienrenaud.jjb.JsonUtils;
 import com.github.fabienrenaud.jjb.data.JsonSource;
@@ -206,8 +205,7 @@ public class Serialization extends JsonBench {
     public Object jsonio() {
         // standardJson() produces Jackson-compatible JSON: suppresses @type, @id/@ref,
         // root type info; stringifies non-String map keys; emits ISO-8601 dates.
-        // Suitable for the round-trip check (Jackson parses our output) and for
-        // apples-to-apples comparison with other databind libraries.
-        return JsonIo.toJson(JSON_SOURCE().nextPojo(), new WriteOptionsBuilder().standardJson().build());
+        // Cached on the provider to match how Jackson/Gson/etc. cache their mappers.
+        return JsonIo.toJson(JSON_SOURCE().nextPojo(), JSON_SOURCE().provider().jsonioWriteOptions());
     }
 }

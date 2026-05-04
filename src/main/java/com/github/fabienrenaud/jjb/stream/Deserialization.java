@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.cedarsoftware.io.JsonIo;
-import com.cedarsoftware.io.ReadOptionsBuilder;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -93,12 +92,11 @@ public class Deserialization extends JsonBench {
     @Benchmark
     @Override
     public Object jsonio() {
-        
-        // returnAsNativeJsonObjects maps to old JsonWriter.USE_MAPS=true behavior, 
-        // see {@link JsonIo#getReadOptionsBuilder(java.util.Map)} and 
+        // returnAsNativeJsonObjects maps to old JsonWriter.USE_MAPS=true behavior,
+        // see {@link JsonIo#getReadOptionsBuilder(java.util.Map)} and
         // <a href="https://github.com/jdereg/json-io/blob/4.19.1/changelog.md">the v4.19 changelog</a>
         return JsonIo.toObjects(
-            JSON_SOURCE().nextInputStream(), new ReadOptionsBuilder().returnAsNativeJsonObjects().build(), null
+            JSON_SOURCE().nextInputStream(), JSON_SOURCE().provider().jsonioReadOptionsMaps(), null
         );
     }
 

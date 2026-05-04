@@ -1,5 +1,9 @@
 package com.github.fabienrenaud.jjb.provider;
 
+import com.cedarsoftware.io.ReadOptions;
+import com.cedarsoftware.io.ReadOptionsBuilder;
+import com.cedarsoftware.io.WriteOptions;
+import com.cedarsoftware.io.WriteOptionsBuilder;
 import com.dslplatform.json.DslJson;
 import com.dslplatform.json.runtime.Settings;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -57,6 +61,11 @@ public class UsersJsonProvider implements JsonProvider<Users> {
     private final JsonType<Users> avajeJsonb_default = io.avaje.jsonb.Jsonb.builder().adapter(new JsonStream(/* serializeNulls */ true, /* serializeEmpty */ true, /* failOnUnknown */ false)).build().type(Users.class);
 
     private final com.bigcloud.djomo.Json djomo = new com.bigcloud.djomo.Json();
+
+    // json-io options are immutable+thread-safe once built; cache one instance per provider
+    // to match how every other library here caches its mapper/parser/serializer.
+    private final WriteOptions jsonioWriteOptions = new WriteOptionsBuilder().standardJson().build();
+    private final ReadOptions jsonioReadOptionsMaps = new ReadOptionsBuilder().returnAsNativeJsonObjects().build();
 
     public UsersJsonProvider() {
 
@@ -185,6 +194,16 @@ public class UsersJsonProvider implements JsonProvider<Users> {
     @Override
     public com.bigcloud.djomo.Json djomo() {
         return djomo;
+    }
+
+    @Override
+    public WriteOptions jsonioWriteOptions() {
+        return jsonioWriteOptions;
+    }
+
+    @Override
+    public ReadOptions jsonioReadOptionsMaps() {
+        return jsonioReadOptionsMaps;
     }
 
     private static final ThreadLocal<QuickbufSchema.Users> QUICKBUF_MESSAGE = ThreadLocal.withInitial(QuickbufSchema.Users::newInstance);
