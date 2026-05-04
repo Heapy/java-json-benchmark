@@ -1,7 +1,5 @@
 package com.github.fabienrenaud.jjb.provider;
 
-import com.cedarsoftware.io.ReadOptions;
-import com.cedarsoftware.io.ReadOptionsBuilder;
 import com.cedarsoftware.io.WriteOptions;
 import com.cedarsoftware.io.WriteOptionsBuilder;
 import com.dslplatform.json.DslJson;
@@ -166,10 +164,10 @@ public class ClientsJsonProvider implements JsonProvider<Clients> {
 
     private final com.bigcloud.djomo.Json djomo = new com.bigcloud.djomo.Json();
 
-    // json-io options are immutable+thread-safe once built; cache one instance per provider
-    // to match how every other library here caches its mapper/parser/serializer.
+    // json-io WriteOptions is immutable+thread-safe once built; cache one instance per provider
+    // to match how every other library here caches its mapper/parser/serializer. Read-side uses
+    // JsonIo.toMaps()/toJava() which manage their own option caches internally.
     private final WriteOptions jsonioWriteOptions = new WriteOptionsBuilder().standardJson().build();
-    private final ReadOptions jsonioReadOptionsMaps = new ReadOptionsBuilder().returnAsNativeJsonObjects().build();
 
     public ClientsJsonProvider() {
 
@@ -303,11 +301,6 @@ public class ClientsJsonProvider implements JsonProvider<Clients> {
     @Override
     public WriteOptions jsonioWriteOptions() {
         return jsonioWriteOptions;
-    }
-
-    @Override
-    public ReadOptions jsonioReadOptionsMaps() {
-        return jsonioReadOptionsMaps;
     }
 
     private static final ThreadLocal<QuickbufSchema.Clients> QUICKBUF_MESSAGE = ThreadLocal.withInitial(QuickbufSchema.Clients::newInstance);
