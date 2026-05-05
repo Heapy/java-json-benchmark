@@ -1,4 +1,4 @@
-FROM amazoncorretto:17-al2-jdk
+FROM amazoncorretto:25-al2023-jdk@sha256:3371b8e140b9d38a267c8ee129d154049a78cd8af79fc68b7538d468466fcdd5
 
 # Create a user
 RUN yum update -y && \

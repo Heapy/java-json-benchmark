@@ -53,7 +53,7 @@ Not evaluated are: RAM utilization, compression, payloads > 1 MB.
 
 ## Results
 
-The benchmarks are written with [JMH](http://openjdk.java.net/projects/code-tools/jmh/) and for Java 17.
+The benchmarks are written with [JMH](http://openjdk.java.net/projects/code-tools/jmh/) and for Java 25.
 
 The results here-below were computed on February the 28th, 2026 with the following libraries and versions:
 
@@ -138,7 +138,7 @@ JMH info:
 
 Prerequisites:
 
-* JDK 17; and JAVA_HOME set.
+* JDK 25; and JAVA_HOME set.
 * make
 
 By default, running `./run ser` (`./run deser` respectively) will run
@@ -177,7 +177,7 @@ Build and run:
 
 Prerequisites:
 
-* JDK 17; and JAVA_HOME set.
+* JDK 25; and JAVA_HOME set.
 * make
 * [packer](https://www.packer.io/)
 * [awscli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and configured
