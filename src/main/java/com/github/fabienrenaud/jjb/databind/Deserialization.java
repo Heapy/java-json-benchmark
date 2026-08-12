@@ -100,6 +100,12 @@ public class Deserialization extends JsonBench {
 
     @Benchmark
     @Override
+    public Object kotlinx_serialization() {
+        return JSON_SOURCE().provider().kotlinxSerialization().fromJson(JSON_SOURCE().nextString());
+    }
+
+    @Benchmark
+    @Override
     public Object dsljson() throws Exception {
         byte[] buffer = JSON_SOURCE().nextByteArray();
         return JSON_SOURCE().provider().dsljson().deserialize(JSON_SOURCE().pojoType(), buffer, buffer.length);

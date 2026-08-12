@@ -3,8 +3,21 @@
 JAR=build/libs/app.jar
 HEAP_SIZE=2g
 
-[ -z ${JVM_OPTIONS} ] && JVM_OPTIONS="-server -Xms${HEAP_SIZE} -Xmx${HEAP_SIZE} --add-opens=java.base/java.time=ALL-UNNAMED --add-modules=jdk.incubator.vector"
-[ -z ${SEED} ] && export SEED=${RANDOM}
-[ -z ${SHADOW} ] && echo ./gradlew clean build shadowJar && ./gradlew clean build shadowJar
+if [ -z "${JVM_OPTIONS:-}" ]; then
+    JVM_OPTIONS="-server -Xms${HEAP_SIZE} -Xmx${HEAP_SIZE} --add-opens=java.base/java.time=ALL-UNNAMED --add-modules=jdk.incubator.vector"
+fi
+if [ -z "${SEED:-}" ]; then
+    SEED=$(date +%s)
+    export SEED
+fi
+if [ -z "${SHADOW:-}" ]; then
+    echo ./gradlew clean build shadowJar
+    ./gradlew clean build shadowJar
+fi
 
-exec java ${JVM_OPTIONS} -jar ${JAR} $*
+JAVA_COMMAND=java
+if [ -n "${JAVA_HOME:-}" ]; then
+    JAVA_COMMAND="${JAVA_HOME}/bin/java"
+fi
+
+exec "${JAVA_COMMAND}" ${JVM_OPTIONS} -jar "${JAR}" "$@"

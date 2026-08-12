@@ -149,6 +149,7 @@ public class ClientsJsonProvider implements JsonProvider<Clients> {
             }).build().adapter(Clients.class);
 
     private final QsonMapper qson = new QsonMapper();
+    private final KotlinxSerializationAdapter kotlinxSerialization = KotlinxClientsJsonAdapter.INSTANCE;
 
     /*
      * DSL-json
@@ -307,6 +308,11 @@ public class ClientsJsonProvider implements JsonProvider<Clients> {
     @Override
     public WriteOptions jsonioWriteOptions() {
         return jsonioWriteOptions;
+    }
+
+    @Override
+    public KotlinxSerializationAdapter kotlinxSerialization() {
+        return kotlinxSerialization;
     }
 
     private static final ThreadLocal<QuickbufSchema.Clients> QUICKBUF_MESSAGE = ThreadLocal.withInitial(QuickbufSchema.Clients::newInstance);

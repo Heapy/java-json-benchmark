@@ -1,9 +1,13 @@
 # Build
 target/
 *.csv
+!archive/csv/**/*.csv
+!archive/cold-jvm/**/*.csv
 *.txt
 build/
 .gradle/
+/.kotlin/
+__pycache__/
 *.gz
 *.tar
 
@@ -20,6 +24,8 @@ out/
 # Runtime
 *.json
 !ami.json
+!archive/cold-jvm/**/*.json
+!archive/cold-jvm/**/*.jsonl
 *.log
 .project
 .settings/org.eclipse.buildship.core.prefs

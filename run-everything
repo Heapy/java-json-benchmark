@@ -1,32 +1,54 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
+
+set -euo pipefail
 
 DATA_TYPES="users clients"
 NUMBERS="1"
 SIZES="1 10 100 1000"
 COMMANDS="ser deser"
 OUTPUT_DIR=output
+JMH_OPTIONS=(-f 2 -wi 1 -w 5 -i 3 -m 1)
 
 echo ./gradlew clean build shadowJar
 ./gradlew clean build shadowJar
 
-[ ! -d ${OUTPUT_DIR} ] && mkdir -p ${OUTPUT_DIR}
+mkdir -p "${OUTPUT_DIR}"
 
-export SEED=${RANDOM}
+if [ -z "${SEED:-}" ]; then
+    SEED=$(date +%s)
+    export SEED
+fi
 export SHADOW="done"
 
 for datatype in ${DATA_TYPES}; do
     for n in ${NUMBERS}; do
         for size in ${SIZES}; do
             for command in ${COMMANDS}; do
-                outputFile="output/${datatype}-${command}-${n}-${size}.txt"
-                echo ./run ${command} --number ${n} --size ${size} --datatype ${datatype}
-                ./run ${command} \
-                    --number ${n} \
-                    --size ${size} \
-                    --datatype ${datatype} \
-                    | tee ${outputFile}
+                outputFile="${OUTPUT_DIR}/${datatype}-${command}-${n}-${size}.txt"
+                partialFile="${outputFile}.partial"
+                if [[ -e "${outputFile}" || -e "${partialFile}" ]]; then
+                    echo "Refusing to overwrite existing output: ${outputFile} or ${partialFile}" >&2
+                    exit 1
+                fi
             done
         done
     done
 done
 
+for datatype in ${DATA_TYPES}; do
+    for n in ${NUMBERS}; do
+        for size in ${SIZES}; do
+            for command in ${COMMANDS}; do
+                outputFile="${OUTPUT_DIR}/${datatype}-${command}-${n}-${size}.txt"
+                partialFile="${outputFile}.partial"
+                echo ./run "${JMH_OPTIONS[@]}" ${command} --number ${n} --size ${size} --datatype ${datatype}
+                ./run "${JMH_OPTIONS[@]}" ${command} \
+                    --number ${n} \
+                    --size ${size} \
+                    --datatype ${datatype} \
+                    2>&1 | tee "${partialFile}"
+                mv "${partialFile}" "${outputFile}"
+            done
+        done
+    done
+done

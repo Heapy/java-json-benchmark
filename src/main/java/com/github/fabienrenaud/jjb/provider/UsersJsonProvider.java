@@ -49,6 +49,7 @@ public class UsersJsonProvider implements JsonProvider<Users> {
     private final org.apache.johnzon.mapper.Mapper johnzon;
     private final com.squareup.moshi.JsonAdapter<Users> moshi = new Moshi.Builder().build().adapter(Users.class);
     private final QsonMapper qson = new QsonMapper();
+    private final KotlinxSerializationAdapter kotlinxSerialization = KotlinxUsersJsonAdapter.INSTANCE;
 
     /*
      * DSL-json
@@ -203,6 +204,11 @@ public class UsersJsonProvider implements JsonProvider<Users> {
     @Override
     public WriteOptions jsonioWriteOptions() {
         return jsonioWriteOptions;
+    }
+
+    @Override
+    public KotlinxSerializationAdapter kotlinxSerialization() {
+        return kotlinxSerialization;
     }
 
     private static final ThreadLocal<QuickbufSchema.Users> QUICKBUF_MESSAGE = ThreadLocal.withInitial(QuickbufSchema.Users::newInstance);

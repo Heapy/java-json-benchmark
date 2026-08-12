@@ -51,6 +51,8 @@ public final class Cli {
         public int forks = 2;
         @Option(type = OptionType.GLOBAL, name = "-wi", description = "JMH: warmup iterations. Defaults to 5.")
         public int warmupIterations = 5;
+        @Option(type = OptionType.GLOBAL, name = "-w", description = "JMH: warmup time in seconds. Defaults to 10.")
+        public int warmupTime = 10;
         @Option(type = OptionType.GLOBAL, name = "-i", description = "JMH: measurement iterations. Defaults to 10.")
         public int measurementIterations = 10;
         @Option(type = OptionType.GLOBAL, name = "-m", description = "JMH: measurement time in seconds. Defaults to 3.")
@@ -90,6 +92,7 @@ public final class Cli {
             ChainedOptionsBuilder b = new OptionsBuilder()
                 .forks(forks)
                 .warmupIterations(warmupIterations)
+                .warmupTime(new TimeValue(warmupTime, TimeUnit.SECONDS))
                 .measurementIterations(measurementIterations)
                 .measurementTime(new TimeValue(measurementTime, TimeUnit.SECONDS))
                 .threads(threads);

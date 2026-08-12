@@ -81,6 +81,10 @@ public abstract class JsonBench {
         return null;
     }
 
+    public Object kotlinx_serialization() throws Exception {
+        return null;
+    }
+
     public Object dsljson() throws Exception {
         return null;
     }

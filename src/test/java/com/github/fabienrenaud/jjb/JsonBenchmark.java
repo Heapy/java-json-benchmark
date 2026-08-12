@@ -41,6 +41,8 @@ public abstract class JsonBenchmark<T> {
         } else if (o instanceof com.grack.nanojson.JsonObject) {
             String v = com.grack.nanojson.JsonWriter.string(o);
             testString(v);
+        } else if (lib == Library.KOTLINX_SERIALIZATION && !(o instanceof CharSequence)) {
+            testString(BENCH.JSON_SOURCE().provider().kotlinxSerialization().toJson(o));
         } else {
             testString(o.toString());
         }
@@ -165,6 +167,13 @@ public abstract class JsonBenchmark<T> {
     public void jsonsmart() throws Exception {
         for (int i = 0; i < ITERATIONS; i++) {
             test(Library.JSONSMART, BENCH.jsonsmart());
+        }
+    }
+
+    @Test
+    public void kotlinx_serialization() throws Exception {
+        for (int i = 0; i < ITERATIONS; i++) {
+            test(Library.KOTLINX_SERIALIZATION, BENCH.kotlinx_serialization());
         }
     }
 

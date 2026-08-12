@@ -1,4 +1,91 @@
-Benchmark runs by date
+# Benchmark runs by date
+
+## 2026-08-12
+
+| Library               | Version    |
+|-----------------------|------------|
+| antons                | 1.17       |
+| avaje-jsonb           | 1.11       |
+| boon                  | 0.34       |
+| djomo                 | 0.9.4      |
+| dsl-json              | 2.0.2      |
+| fastjson              | 2.0.57     |
+| flexjson              | 3.3        |
+| Fory JSON             | 1.6.0      |
+| genson                | 1.6        |
+| gson                  | 2.11.0     |
+| jackson               | 2.17.1     |
+| jodd                  | 6.0.3      |
+| johnzon               | 2.0.1      |
+| jakarta-json          | 2.1.3      |
+| json-io               | 4.102.0    |
+| json-simple           | 1.1.1      |
+| json-smart            | 2.5.1      |
+| Kotlin                | 2.4.10     |
+| kotlinx.serialization | 1.11.0     |
+| logansquare           | 1.3.7      |
+| minimal-json          | 0.9.5      |
+| mjson                 | 1.4.1      |
+| moshi                 | 1.15.1     |
+| nanojson              | 1.9        |
+| org.json              | 20240303   |
+| purejson              | 1.0.1      |
+| qson                  | 1.1.1      |
+| Quickbuf JSON         | 1.4        |
+| tapestry              | 5.8.6      |
+| underscore            | 1.101      |
+| wast                  | 0.0.29.1   |
+| yasson                | 3.0.3      |
+
+The charts show normalized throughput in nominal MiB/s and rank the top 20 entries by the 1000 KB result,
+while always retaining kotlinx.serialization. Full results are preserved in the linked CSV files and the processed
+JMH summary/failure artifact.
+
+Boon 0.34 produced no scores on JDK 25 because `FastStringUtils` initialization fails with a
+`ClassCastException`. It remains listed as part of the suite but is omitted from the charts and CSV data; the
+archived JMH output preserves the failure details.
+
+kotlinx.serialization's `Clients` output is semantically equivalent but not always byte-for-byte identical to
+Jackson's: `OffsetDateTime.toString()` can pad fractional seconds. Reported MiB/s uses the nominal fixture size,
+not the emitted byte count; for the seeded fixtures, the kotlinx output is at most about 0.06% longer.
+
+**`Users` model**
+
+![json deserialization performance for primitive types, String, List and simple POJOs][20260812-graph-users-deser]
+![json serialization performance for primitive types, String, List and simple POJOs][20260812-graph-users-ser]
+
+**`Clients` model**
+
+![json deserialization performance for primitive types, String, List and simple POJOs, arrays, enum, UUID, LocalDate][20260812-graph-clients-deser]
+![json serialization performance for primitive types, String, List and simple POJOs, arrays, enum, UUID, LocalDate][20260812-graph-clients-ser]
+
+**JMH configuration and hardware**
+
+Tests were run on a dedicated Debian 13 virtual machine under KVM with an AMD Ryzen 7 7700X
+(8 cores/16 threads) and 31 GiB RAM, using BellSoft Liberica JDK 25.0.4+9-LTS. The benchmark seed was
+fixed at `20260811`.
+
+```
+# JMH version: 1.35
+# VM version: JDK 25.0.4, OpenJDK 64-Bit Server VM, 25.0.4+9-LTS
+# VM invoker: $SDKMAN_DIR/candidates/java/25.0.4-librca/bin/java
+# VM options: -Xms2g -Xmx2g --add-opens=java.base/java.time=ALL-UNNAMED --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 5 s each
+# Measurement: 3 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 15 threads, will synchronize iterations
+# Forks: 2
+# Benchmark mode: Throughput, ops/time
+```
+
+**Links**
+
+* [Users deserialization CSV](/archive/csv/2026-08-12/users-deser-1.csv)
+* [Users serialization CSV](/archive/csv/2026-08-12/users-ser-1.csv)
+* [Clients deserialization CSV](/archive/csv/2026-08-12/clients-deser-1.csv)
+* [Clients serialization CSV](/archive/csv/2026-08-12/clients-ser-1.csv)
+* [JMH summary tables and captured failure output](/archive/raw-results-2026-08-12.md)
 
 ## 2026-02-28
 
@@ -121,7 +208,7 @@ Tests were run on an [Amazon EC2 c8g.xlarge](https://aws.amazon.com/ec2/instance
 **Links**
 
 * [google spreadsheet][20240130-spreadsheet]
-* [raw-results-2023-04-30.md](/archive/raw-results-2024-01-30.md)
+* [raw-results-2024-01-30.md](/archive/raw-results-2024-01-30.md)
 
 ## 2023-04-30
 
@@ -360,7 +447,7 @@ Same as below, JMH 1.19.
 **Links**
 
  * [google spreadsheet](https://docs.google.com/spreadsheets/d/16GSfiTSRP2WKu3XxqNPIW_0KvZ2PezjFMHqTHrG-XZU/edit?usp=sharing)
- * [raw-results-2016-11-21.md](/archive/raw-results-2017-05-21.md)
+ * [raw-results-2017-05-21.md](/archive/raw-results-2017-05-21.md)
 
 ## 2016-11-21
 
@@ -512,3 +599,8 @@ Same as below, JMH 1.15.
 [20260228-graph-users-ser]: https://docs.google.com/spreadsheets/d/e/2PACX-1vSUD5_YT6-RXIvkwRiwFDMfGmEiYkYYs2fBY5p1p2iVQU01v71JQwMqPDlLAiLf2uL9STEzpOXTp0Us/pubchart?oid=296776676&format=image
 [20260228-graph-clients-deser]: https://docs.google.com/spreadsheets/d/e/2PACX-1vSUD5_YT6-RXIvkwRiwFDMfGmEiYkYYs2fBY5p1p2iVQU01v71JQwMqPDlLAiLf2uL9STEzpOXTp0Us/pubchart?oid=684555912&format=image
 [20260228-graph-clients-ser]: https://docs.google.com/spreadsheets/d/e/2PACX-1vSUD5_YT6-RXIvkwRiwFDMfGmEiYkYYs2fBY5p1p2iVQU01v71JQwMqPDlLAiLf2uL9STEzpOXTp0Us/pubchart?oid=2004244401&format=image
+
+[20260812-graph-users-deser]: /archive/charts/2026-08-12/2026-08-12-users-deser.png
+[20260812-graph-users-ser]: /archive/charts/2026-08-12/2026-08-12-users-ser.png
+[20260812-graph-clients-deser]: /archive/charts/2026-08-12/2026-08-12-clients-deser.png
+[20260812-graph-clients-ser]: /archive/charts/2026-08-12/2026-08-12-clients-ser.png

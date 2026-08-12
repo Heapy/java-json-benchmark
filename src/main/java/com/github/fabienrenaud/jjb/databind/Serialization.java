@@ -124,6 +124,12 @@ public class Serialization extends JsonBench {
 
     @Benchmark
     @Override
+    public Object kotlinx_serialization() {
+        return JSON_SOURCE().provider().kotlinxSerialization().toJson(JSON_SOURCE().nextKotlinxPojo());
+    }
+
+    @Benchmark
+    @Override
     public Object dsljson() throws Exception {
         ByteArrayOutputStream baos = JsonUtils.byteArrayOutputStream();
         JSON_SOURCE().provider().dsljson().serialize(JSON_SOURCE().nextPojo(), baos);

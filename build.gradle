@@ -1,6 +1,8 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.jetbrains.kotlin.jvm' version '2.4.10'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.4.10'
     id 'com.gradleup.shadow' version '9.2.2'
     id 'com.github.ben-manes.versions' version '0.49.0'
 }
@@ -19,6 +21,10 @@ java {
     }
 }
 
+kotlin {
+    jvmToolchain(25)
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -30,6 +36,7 @@ ext {
     dslJsonVersion = '2.0.2'
     johnzonVersion = '2.0.1'
     jmhVersion = '1.35'
+    kotlinxSerializationVersion = '1.11.0'
 }
 
 dependencies {
@@ -82,6 +89,8 @@ dependencies {
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     // json-smart
     implementation 'net.minidev:json-smart:2.5.1'
+    // kotlinx.serialization
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:${kotlinxSerializationVersion}"
     // LoganSquare
     implementation 'com.bluelinelabs:logansquare:1.3.7'
     annotationProcessor 'com.bluelinelabs:logansquare-compiler:1.3.7'
@@ -121,6 +130,192 @@ dependencies {
     annotationProcessor "org.openjdk.jmh:jmh-generator-annprocess:${jmhVersion}"
 }
 
+// Cold-JVM measurements live outside the main source set so a child process
+// cannot initialize JsonBench, JsonSource, or the eager all-library providers.
+sourceSets {
+    coldBenchmark {
+        java.srcDir 'src/coldBenchmark/java'
+        kotlin.srcDir 'src/coldBenchmark/kotlin'
+    }
+}
+
+configurations {
+    coldBenchmarkCommonRuntime {
+        canBeConsumed = false
+        canBeResolved = true
+    }
+    coldBenchmarkJacksonRuntime {
+        canBeConsumed = false
+        canBeResolved = true
+        extendsFrom coldBenchmarkCommonRuntime
+    }
+    coldBenchmarkGsonRuntime {
+        canBeConsumed = false
+        canBeResolved = true
+        extendsFrom coldBenchmarkCommonRuntime
+    }
+    coldBenchmarkKotlinxRuntime {
+        canBeConsumed = false
+        canBeResolved = true
+        extendsFrom coldBenchmarkCommonRuntime
+    }
+    coldBenchmarkForyRuntime {
+        canBeConsumed = false
+        canBeResolved = true
+        extendsFrom coldBenchmarkCommonRuntime
+    }
+}
+
+dependencies {
+    // Compilation sees all adapters; every measured child gets only its selected
+    // library plus the common DTO/runtime classpath.
+    coldBenchmarkImplementation 'org.jetbrains.kotlin:kotlin-stdlib:2.4.10'
+    coldBenchmarkImplementation "org.jetbrains.kotlinx:kotlinx-serialization-json:${kotlinxSerializationVersion}"
+    coldBenchmarkImplementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    coldBenchmarkImplementation 'com.google.code.gson:gson:2.11.0'
+    coldBenchmarkImplementation 'org.apache.fory:fory-json:1.6.0'
+
+    coldBenchmarkCommonRuntime 'org.jetbrains.kotlin:kotlin-stdlib:2.4.10'
+    coldBenchmarkCommonRuntime "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:${kotlinxSerializationVersion}"
+    coldBenchmarkJacksonRuntime "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    coldBenchmarkGsonRuntime 'com.google.code.gson:gson:2.11.0'
+    coldBenchmarkKotlinxRuntime "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:${kotlinxSerializationVersion}"
+    coldBenchmarkForyRuntime 'org.apache.fory:fory-json:1.6.0'
+
+    testImplementation sourceSets.coldBenchmark.output
+}
+
+tasks.register('coldBenchmarkJar', Jar) {
+    dependsOn tasks.named('coldBenchmarkClasses')
+    archiveFileName = 'cold-benchmark-harness.jar'
+    destinationDirectory = layout.buildDirectory.dir('cold-benchmark')
+    from sourceSets.coldBenchmark.output
+    manifest {
+        attributes 'Main-Class': 'com.github.fabienrenaud.jjb.cold.ColdBenchmarkMain'
+    }
+}
+
+// Keep the child classpath stable across Gradle cache layouts. Its order is
+// captured in metadata because it is part of the cold-start environment.
+def coldBenchmarkArtifactOrder = [
+    jackson: ['jackson-annotations-', 'jackson-core-', 'jackson-databind-',
+              'kotlin-stdlib-', 'kotlinx-serialization-core-', 'annotations-'],
+    gson: ['gson-', 'error_prone_annotations-', 'kotlin-stdlib-',
+           'kotlinx-serialization-core-', 'annotations-'],
+    kotlinx: ['kotlin-stdlib-', 'kotlinx-serialization-core-',
+              'kotlinx-serialization-json-', 'annotations-'],
+    fory: ['fory-core-', 'fory-json-', 'commons-compiler-', 'janino-',
+           'kotlin-stdlib-', 'kotlinx-serialization-core-', 'annotations-'],
+]
+
+def orderedColdBenchmarkFiles = { library, files ->
+    def prefixes = coldBenchmarkArtifactOrder[library]
+    files.sort { left, right ->
+        def leftIndex = prefixes.findIndexOf { left.name.startsWith(it) }
+        def rightIndex = prefixes.findIndexOf { right.name.startsWith(it) }
+        leftIndex = leftIndex < 0 ? prefixes.size() : leftIndex
+        rightIndex = rightIndex < 0 ? prefixes.size() : rightIndex
+        leftIndex == rightIndex ? left.name <=> right.name : leftIndex <=> rightIndex
+    }
+}
+
+def coldBenchmarkClasspathFiles = {
+    def harnessJar = tasks.named('coldBenchmarkJar').get().archiveFile.get().asFile
+    [
+        jackson: [harnessJar] + orderedColdBenchmarkFiles(
+            'jackson', configurations.coldBenchmarkJacksonRuntime.files
+        ),
+        gson: [harnessJar] + orderedColdBenchmarkFiles(
+            'gson', configurations.coldBenchmarkGsonRuntime.files
+        ),
+        kotlinx: [harnessJar] + orderedColdBenchmarkFiles(
+            'kotlinx', configurations.coldBenchmarkKotlinxRuntime.files
+        ),
+        fory: [harnessJar] + orderedColdBenchmarkFiles(
+            'fory', configurations.coldBenchmarkForyRuntime.files
+        ),
+    ]
+}
+
+def coldBenchmarkChildRuntime = files({
+    coldBenchmarkClasspathFiles().values().flatten()
+})
+
+def coldBenchmarkLibDirectory = layout.buildDirectory.dir('cold-benchmark/lib')
+
+tasks.register('prepareColdBenchmark', Sync) {
+    dependsOn tasks.named('coldBenchmarkJar')
+    into coldBenchmarkLibDirectory
+    from coldBenchmarkChildRuntime
+
+    doLast {
+        def classpathFiles = coldBenchmarkClasspathFiles()
+        def collisions = classpathFiles.values().flatten()
+            .groupBy { it.name }
+            .findAll { name, files -> files.collect { it.canonicalPath }.unique().size() > 1 }
+        if (!collisions.isEmpty()) {
+            throw new GradleException("Cold benchmark has duplicate jar basenames: ${collisions.keySet()}")
+        }
+
+        def target = coldBenchmarkLibDirectory.get().file('cold-classpaths.properties').asFile
+        target.withWriter('ISO-8859-1') { writer ->
+            ['jackson', 'gson', 'kotlinx', 'fory'].each { library ->
+                writer.write(library)
+                writer.write('=')
+                writer.write(classpathFiles[library].collect { it.name }.join(','))
+                writer.write(System.lineSeparator())
+            }
+        }
+    }
+}
+
+tasks.register('coldBenchmark', JavaExec) {
+    dependsOn tasks.named('prepareColdBenchmark')
+    group = 'benchmark'
+    description = 'Runs randomized cold-JVM JSON samples (30 per cell by default).'
+    classpath = files(tasks.named('coldBenchmarkJar').flatMap { it.archiveFile })
+    mainClass = 'com.github.fabienrenaud.jjb.cold.ColdBenchmarkMain'
+    systemProperty 'coldBenchmark.libDir', coldBenchmarkLibDirectory.get().asFile.absolutePath
+    workingDir = projectDir
+    if (project.hasProperty('coldArgs')) {
+        args org.apache.tools.ant.types.Commandline.translateCommandline(
+            project.property('coldArgs').toString()
+        )
+    }
+}
+
+def coldBenchmarkStartScripts = tasks.register(
+    'coldBenchmarkStartScripts',
+    org.gradle.jvm.application.tasks.CreateStartScripts
+) {
+    dependsOn tasks.named('coldBenchmarkJar')
+    applicationName = 'cold-benchmark'
+    mainClass = 'com.github.fabienrenaud.jjb.cold.ColdBenchmarkMain'
+    outputDir = layout.buildDirectory.dir('cold-benchmark/scripts').get().asFile
+    classpath = files(tasks.named('coldBenchmarkJar').flatMap { it.archiveFile })
+}
+
+distributions {
+    main {
+        contents {
+            from(coldBenchmarkStartScripts) {
+                into 'bin'
+                filePermissions {
+                    unix('rwxr-xr-x')
+                }
+            }
+            from(tasks.named('prepareColdBenchmark')) {
+                into 'lib'
+                duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            }
+        }
+    }
+}
+
+tasks.named('installDist') {
+    dependsOn tasks.named('prepareColdBenchmark'), coldBenchmarkStartScripts
+}
+
 shadowJar {
     archiveFileName = 'app.jar'
     exclude 'META-INF/*.SF'
@@ -129,7 +324,10 @@ shadowJar {
 }
 
 test {
-    jvmArgs '--add-opens=java.base/java.time=ALL-UNNAMED --add-modules=jdk.incubator.vector'
+    dependsOn tasks.named('prepareColdBenchmark')
+    systemProperty 'jjb.cold.classpathFile', coldBenchmarkLibDirectory.get()
+        .file('cold-classpaths.properties').asFile.absolutePath
+    jvmArgs '--add-opens=java.base/java.time=ALL-UNNAMED', '--add-modules=jdk.incubator.vector'
     testLogging {
         exceptionFormat = 'full'
         showStandardStreams = true
