@@ -67,4 +67,6 @@ public interface JsonProvider<T> {
 
     WriteOptions jsonioWriteOptions();
 
+    KotlinxSerializationAdapter kotlinxSerialization();
+
 }
